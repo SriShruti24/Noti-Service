@@ -23,7 +23,7 @@ async function connectQueue(){
                 ticketId = ticket.id;
 
                 // Send email
-                const senderEmail = process.env.SENDER_EMAIL || ServerConfig.GMAIL_EMAIL || 'sri.shruti24@gmail.com';
+                const senderEmail = ServerConfig.GMAIL_EMAIL || "airlinenoti2@gmail.com";
                 await EmailService.sendEmail(senderEmail, object.recepientEmail, object.subject, object.text);
                 
                 // Update ticket status to SUCCESS
