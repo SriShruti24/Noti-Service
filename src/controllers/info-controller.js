@@ -4,12 +4,7 @@ const info =(req,res)=>{
         success:true,
         message:'API IS LIVE',
         error:{},
-        data:{
-            dbHost: process.env.DB_HOST || 'not-set',
-            dbPort: process.env.DB_PORT || 'not-set',
-            dbName: process.env.DB_NAME || 'not-set',
-            dbUser: process.env.DB_USER || 'not-set'
-        }
+        data:{}
     });
 }
 module.exports={
