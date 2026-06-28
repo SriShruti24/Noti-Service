@@ -38,8 +38,19 @@ async function getpendingEmails(){
 }
 
 
+async function updateTicket(ticketId, data){
+    try {
+        const response=await ticketRepo.update(ticketId, data);
+        return response;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
 module.exports={
 sendEmail,
 createTicket,
+updateTicket,
 getpendingEmails
 }

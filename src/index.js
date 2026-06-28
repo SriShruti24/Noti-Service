@@ -7,10 +7,38 @@ async function connectQueue(){
         const channel =await connection.createChannel();
         await channel.assertQueue("noti-queue");
         channel.consume("noti-queue",async(data)=>{
-            console.log(`${Buffer.from(data.content)}`);
-            const object=JSON.parse(`${Buffer.from(data.content)}`);
-           await EmailService.sendEmail("airlinenoti2@gmail.com",object.recepientEmail,object.subject,object.text);
-            channel.ack(data);
+            let ticketId = null;
+            let object = {};
+            try {
+                console.log(`Received queue message: ${Buffer.from(data.content)}`);
+                object = JSON.parse(`${Buffer.from(data.content)}`);
+                
+                // Create database ticket record
+                const ticket = await EmailService.createTicket({
+                    subject: object.subject,
+                    content: object.text,
+                    recepientEmail: object.recepientEmail,
+                    status: 'PENDING'
+                });
+                ticketId = ticket.id;
+
+                // Send email
+                await EmailService.sendEmail("airlinenoti2@gmail.com", object.recepientEmail, object.subject, object.text);
+                
+                // Update ticket status to SUCCESS
+                if (ticketId) {
+                    await EmailService.updateTicket(ticketId, { status: 'SUCCESS' });
+                }
+                channel.ack(data);
+                console.log(`Successfully processed email notification for ticket ${ticketId}`);
+            } catch (err) {
+                console.error("Queue consumption error:", err.message);
+                if (ticketId) {
+                    await EmailService.updateTicket(ticketId, { status: 'FAILED' }).catch(() => {});
+                }
+                // Always ack to prevent poison message loop
+                channel.ack(data);
+            }
         })
     } catch (error) {
        console.log(error) ;
