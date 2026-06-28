@@ -4,7 +4,9 @@ const info =(req,res)=>{
         success:true,
         message:'API IS LIVE',
         error:{},
-        data:{}
+        data:{
+            dbHost: process.env.DB_HOST || 'not-set'
+        }
     });
 }
 module.exports={
