@@ -1,4 +1,5 @@
-# Notification Service
+# Notification Service (Deployed on Render)
+
 
 ## 1. Service Overview
 The **Notification Service** is an event-driven helper utility responsible for asynchronous email dispatch. It consumes transaction payloads from RabbitMQ and fires confirmation alerts to users.
