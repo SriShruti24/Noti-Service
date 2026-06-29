@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const https = require('https');
 const amqplib = require('amqplib');
 const { ServerConfig } = require('./config');
 const { EmailService } = require('./services');
@@ -55,8 +57,26 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', apiRoutes);
 
+// Health check — used by Render and self-ping to keep service alive
+app.get('/ping', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.listen(ServerConfig.PORT, async () => {
     console.log(`Server is running on port: ${ServerConfig.PORT}`);
     await connectQueue();
     console.log("queue is up");
+
+    // Self-ping every 10 minutes to prevent Render free-tier cold starts.
+    // Without this the service sleeps after 15 min of inactivity and queue
+    // messages pile up — causing emails to arrive 40+ minutes late.
+    const SERVICE_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${ServerConfig.PORT}`;
+    setInterval(() => {
+        const client = SERVICE_URL.startsWith('https') ? https : http;
+        client.get(`${SERVICE_URL}/ping`, (res) => {
+            console.log(`[self-ping] ${res.statusCode}`);
+        }).on('error', (err) => {
+            console.warn('[self-ping] failed:', err.message);
+        });
+    }, 10 * 60 * 1000); // every 10 minutes
 });
